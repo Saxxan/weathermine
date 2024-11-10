@@ -1,5 +1,5 @@
 ---
-import { getWeatherDescription } from '../utils/weather';
+import { getWeatherDescription } from "../utils/weather";
 
 interface WeatherData {
   city: string;
@@ -13,18 +13,36 @@ interface WeatherData {
 const { weatherData } = Astro.props;
 ---
 
-<div class="bg-white p-6 rounded-lg shadow-lg">
-  <h2 class="text-2xl font-bold mb-4">Current Weather in {weatherData.city}</h2>
-  <p class="text-xl">Temperature: {weatherData.temperature}°C</p>
-  <p class="text-xl">Condition: {getWeatherDescription(weatherData.weatherCode)}</p>
-  <p class="text-xl">Wind Speed: {weatherData.windSpeed} km/h</p>
-  <h3 class="text-xl font-semibold mt-4 mb-2">Hourly Precipitation Probability</h3>
+<div class="p-6 rounded-lg shadow-lg">
+  <h2 class="text-2xl font-medium mb-6">
+    Current Weather in {weatherData.city}
+  </h2>
+
+  <section class="flex justify-between">
+    <div>
+      <p class="text-xl text-center mb-2">Temperature</p>
+      <p class="text-center dark:text-zinc-200 text-gray-800">{weatherData.temperature} ºC</p>
+    </div>
+    <div>
+      <p class="text-xl text-center mb-2">Condition</p>
+      <p class="text-center dark:text-zinc-200 text-gray-800">{getWeatherDescription(weatherData.weatherCode)}</p>
+    </div>
+    <div>
+      <p class="text-xl text-center mb-2">Wind Speed</p>
+      <p class="text-center dark:text-zinc-200 text-gray-800">{weatherData.windSpeed} km/h</p>
+    </div>
+  </section>
+  <h3 class="text-xl font-semibold mt-4 mb-2">
+    Hourly Precipitation Probability
+  </h3>
   <div class="grid grid-cols-6 gap-2">
-    {weatherData.hourlyTime.map((time, index) => (
-      <div class="text-center">
-        <p class="text-sm">{new Date(time).getHours()}:00</p>
-        <p class="font-bold">{weatherData.hourlyPrecipitation[index]}%</p>
-      </div>
-    ))}
+    {
+      weatherData.hourlyTime.map((time, index) => (
+        <div class="text-center">
+          <p class="text-sm">{new Date(time).getHours()}:00</p>
+          <p class="font-bold">{weatherData.hourlyPrecipitation[index]}%</p>
+        </div>
+      ))
+    }
   </div>
 </div>
