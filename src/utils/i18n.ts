@@ -94,7 +94,7 @@ export const translations = {
     // Weather details
     wind: "Viento",
     humidity: "Humedad",
-    feelsLike: "Sensación",
+    feelsLike: "Sensación térmica",
     sunrise: "Amanecer",
     sunset: "Atardecer",
     weather: "Clima",
