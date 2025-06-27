@@ -104,7 +104,7 @@ try {
 </Layout>
 
 <script>
-  import { getCoordinates, getWeatherData, searchCities } from '../utils/api';
+  import { getCoordinates, getWeatherData, searchCities, getCityFromCoordinates } from '../utils/api';
   import { processWeatherData, getWeatherDescription } from '../utils/weather';
 
   const form = document.getElementById('search-form');
@@ -240,11 +240,13 @@ try {
               </div>
             `;
 
+            // Get city name from coordinates
+            const cityName = await getCityFromCoordinates(latitude, longitude);
             const weatherData = await getWeatherData(latitude, longitude);
-            const currentWeather = processWeatherData(weatherData, 'Your Location');
+            const currentWeather = processWeatherData(weatherData, cityName);
             
-            // Update input to show current location
-            cityInput.value = 'Your Current Location';
+            // Update input to show the actual city name
+            cityInput.value = cityName;
             
             displayWeatherData(currentWeather);
             resolve(currentWeather);

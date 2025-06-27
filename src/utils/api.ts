@@ -26,6 +26,28 @@ export async function getCoordinates(city: string): Promise<{ latitude: number; 
   };
 }
 
+export async function getCityFromCoordinates(latitude: number, longitude: number): Promise<string> {
+  const params = new URLSearchParams({
+    latitude: latitude.toString(),
+    longitude: longitude.toString(),
+    count: '1',
+    language: 'en',
+    format: 'json'
+  });
+
+  const response = await fetch(`${GEOCODING_API_URL}?${params}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch city name');
+  }
+
+  const data = await response.json();
+  if (!data.results || data.results.length === 0) {
+    return 'Your Location';
+  }
+
+  return data.results[0].name;
+}
+
 export async function searchCities(query: string): Promise<Array<{
   id: number;
   name: string;
