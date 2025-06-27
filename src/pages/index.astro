@@ -40,6 +40,17 @@ try {
             <!-- Suggestions will be populated here -->
           </div>
         </div>
+        <button 
+          type="button" 
+          id="location-btn"
+          class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center"
+          title="Use current location"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
         <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-300 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
           Search
         </button>
@@ -55,6 +66,40 @@ try {
         <WeatherDisplay weatherData={currentWeather} />
       )}
     </div>
+
+    <!-- Location permission modal -->
+    <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
+            <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Enable Location Access
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            Allow WeatherMine to access your location to show weather for your current area.
+          </p>
+          <div class="flex space-x-3">
+            <button 
+              id="allow-location" 
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Allow
+            </button>
+            <button 
+              id="deny-location" 
+              class="flex-1 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Not Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </Layout>
 
@@ -64,12 +109,20 @@ try {
 
   const form = document.getElementById('search-form');
   const cityInput = document.getElementById('city-input');
+  const locationBtn = document.getElementById('location-btn');
   const suggestionsDropdown = document.getElementById('suggestions-dropdown');
   const weatherContainer = document.getElementById('weather-container');
+  const locationModal = document.getElementById('location-modal');
+  const allowLocationBtn = document.getElementById('allow-location');
+  const denyLocationBtn = document.getElementById('deny-location');
 
   let debounceTimer;
   let selectedSuggestionIndex = -1;
   let suggestions = [];
+
+  // Check if user has previously denied location or if we should ask
+  const hasAskedForLocation = localStorage.getItem('locationAsked');
+  const locationDenied = localStorage.getItem('locationDenied');
 
   function getWeatherIcon(code: number): string {
     if (code <= 3) return `
@@ -140,6 +193,14 @@ try {
     selectedSuggestionIndex = -1;
   }
 
+  function showLocationModal() {
+    locationModal.classList.remove('hidden');
+  }
+
+  function hideLocationModal() {
+    locationModal.classList.add('hidden');
+  }
+
   async function fetchSuggestions(query) {
     try {
       const results = await searchCities(query);
@@ -149,6 +210,85 @@ try {
       console.error('Error fetching suggestions:', error);
       hideSuggestions();
     }
+  }
+
+  async function getCurrentLocationWeather() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser'));
+        return;
+      }
+
+      // Show loading state
+      weatherContainer.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p class="text-gray-600 dark:text-gray-400">Getting your location...</p>
+        </div>
+      `;
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            
+            // Update loading message
+            weatherContainer.innerHTML = `
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">Loading weather for your location...</p>
+              </div>
+            `;
+
+            const weatherData = await getWeatherData(latitude, longitude);
+            const currentWeather = processWeatherData(weatherData, 'Your Location');
+            
+            // Update input to show current location
+            cityInput.value = 'Your Current Location';
+            
+            displayWeatherData(currentWeather);
+            resolve(currentWeather);
+          } catch (error) {
+            console.error('Error fetching weather for current location:', error);
+            weatherContainer.innerHTML = `
+              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+                <p class="text-red-600 dark:text-red-400 text-lg">Failed to get weather for your location</p>
+              </div>
+            `;
+            reject(error);
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          let errorMessage = 'Unable to get your location';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied. Please enable location permissions.';
+              localStorage.setItem('locationDenied', 'true');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out.';
+              break;
+          }
+          
+          weatherContainer.innerHTML = `
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+              <p class="text-red-600 dark:text-red-400 text-lg">${errorMessage}</p>
+            </div>
+          `;
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    });
   }
 
   function generateHourlyForecastHTML(currentWeather) {
@@ -260,6 +400,52 @@ try {
     `;
   }
 
+  function displayWeatherData(currentWeather) {
+    const hourlyForecastHTML = generateHourlyForecastHTML(currentWeather);
+
+    weatherContainer.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-6 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <h2 class="text-2xl font-semibold mb-4 text-center">${currentWeather.city}</h2>
+          
+          <div class="flex items-center justify-center mb-6">
+            <div class="text-center mr-6">
+              <div class="flex justify-center mb-2">${getWeatherIcon(currentWeather.weatherCode)}</div>
+              <p class="text-lg opacity-90">${getWeatherDescription(currentWeather.weatherCode)}</p>
+            </div>
+            <div class="text-center">
+              <p class="text-6xl font-light mb-2">${currentWeather.temperature}°</p>
+              <p class="text-sm opacity-75">H: ${currentWeather.maxTemperature}° L: ${currentWeather.minTemperature}°</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+              <div class="flex items-center mb-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1a3 3 0 010 6h-1m8-6h1a3 3 0 010 6h-1m-9-6h1a3 3 0 010 6h-1"/>
+                </svg>
+                <span class="ml-2 text-sm opacity-75">Wind Speed</span>
+              </div>
+              <p class="text-xl font-semibold">${currentWeather.windSpeed} km/h</p>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+              <div class="flex items-center mb-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="ml-2 text-sm opacity-75">Feels Like</span>
+              </div>
+              <p class="text-xl font-semibold">${currentWeather.temperature}°C</p>
+            </div>
+          </div>
+        </div>
+
+        ${hourlyForecastHTML}
+      </div>
+    `;
+  }
+
   async function fetchWeatherData(cityName, latitude, longitude) {
     // Show loading state
     weatherContainer.innerHTML = `
@@ -272,50 +458,7 @@ try {
     try {
       const weatherData = await getWeatherData(latitude, longitude);
       const currentWeather = processWeatherData(weatherData, cityName);
-
-      const hourlyForecastHTML = generateHourlyForecastHTML(currentWeather);
-
-      weatherContainer.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-          <div class="p-6 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-            <h2 class="text-2xl font-semibold mb-4 text-center">${currentWeather.city}</h2>
-            
-            <div class="flex items-center justify-center mb-6">
-              <div class="text-center mr-6">
-                <div class="flex justify-center mb-2">${getWeatherIcon(currentWeather.weatherCode)}</div>
-                <p class="text-lg opacity-90">${getWeatherDescription(currentWeather.weatherCode)}</p>
-              </div>
-              <div class="text-center">
-                <p class="text-6xl font-light mb-2">${currentWeather.temperature}°</p>
-                <p class="text-sm opacity-75">H: ${currentWeather.maxTemperature}° L: ${currentWeather.minTemperature}°</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                <div class="flex items-center mb-1">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1a3 3 0 010 6h-1m8-6h1a3 3 0 010 6h-1m-9-6h1a3 3 0 010 6h-1"/>
-                  </svg>
-                  <span class="ml-2 text-sm opacity-75">Wind Speed</span>
-                </div>
-                <p class="text-xl font-semibold">${currentWeather.windSpeed} km/h</p>
-              </div>
-              <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                <div class="flex items-center mb-1">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-                  <span class="ml-2 text-sm opacity-75">Feels Like</span>
-                </div>
-                <p class="text-xl font-semibold">${currentWeather.temperature}°C</p>
-              </div>
-            </div>
-          </div>
-
-          ${hourlyForecastHTML}
-        </div>
-      `;
+      displayWeatherData(currentWeather);
     } catch (error) {
       console.error('Error fetching weather data:', error);
       weatherContainer.innerHTML = `
@@ -325,6 +468,45 @@ try {
       `;
     }
   }
+
+  // Auto-request location on first visit (if not previously denied)
+  if (!hasAskedForLocation && !locationDenied) {
+    setTimeout(() => {
+      showLocationModal();
+    }, 1000); // Show modal after 1 second
+  }
+
+  // Location button click handler
+  locationBtn.addEventListener('click', () => {
+    if (locationDenied === 'true') {
+      showLocationModal();
+    } else {
+      getCurrentLocationWeather();
+    }
+  });
+
+  // Modal event handlers
+  allowLocationBtn.addEventListener('click', () => {
+    hideLocationModal();
+    localStorage.setItem('locationAsked', 'true');
+    localStorage.removeItem('locationDenied');
+    getCurrentLocationWeather();
+  });
+
+  denyLocationBtn.addEventListener('click', () => {
+    hideLocationModal();
+    localStorage.setItem('locationAsked', 'true');
+    localStorage.setItem('locationDenied', 'true');
+  });
+
+  // Close modal when clicking outside
+  locationModal.addEventListener('click', (e) => {
+    if (e.target === locationModal) {
+      hideLocationModal();
+      localStorage.setItem('locationAsked', 'true');
+      localStorage.setItem('locationDenied', 'true');
+    }
+  });
 
   // Input event listener for suggestions
   cityInput.addEventListener('input', (e) => {
