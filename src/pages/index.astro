@@ -38,29 +38,6 @@ try {
   weatherCondition={weatherCondition}
 >
   <main class="container mx-auto px-4 py-8 max-w-4xl">
-    <!-- Breadcrumb for SEO -->
-    <nav aria-label="Breadcrumb" class="mb-4">
-      <ol class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-        <li>
-          <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400">
-            {getTranslation('home', currentLang)}
-          </a>
-        </li>
-        {currentWeather?.city && (
-          <>
-            <li>
-              <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-              </svg>
-            </li>
-            <li class="text-gray-900 dark:text-white font-medium">
-              {currentWeather.city} {getTranslation('weather', currentLang)}
-            </li>
-          </>
-        )}
-      </ol>
-    </nav>
-
     <!-- Header with title and settings -->
     <header class="flex justify-between items-center mb-8">
       <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
