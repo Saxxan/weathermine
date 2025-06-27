@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import WeatherDisplay from '../components/WeatherDisplay.astro';
 import { getCoordinates, getWeatherData } from '../utils/api';
-import { processWeatherData } from '../utils/weather';
+import { processWeatherData, getWeatherDescription } from '../utils/weather';
 import { getTranslation, getCurrentLanguage } from '../utils/i18n';
 
 const defaultCity = "Madrid";
@@ -10,21 +10,59 @@ const currentLang = getCurrentLanguage();
 
 let currentWeather;
 let error = null;
+let pageTitle = getTranslation('appTitle', currentLang);
+let pageDescription = getTranslation('appDescription', currentLang);
+let weatherCondition = '';
 
 try {
   const { latitude, longitude, name } = await getCoordinates(defaultCity);
   const weatherData = await getWeatherData(latitude, longitude);
   currentWeather = processWeatherData(weatherData, name, latitude);
+  
+  // Update SEO data with weather information
+  weatherCondition = getWeatherDescription(currentWeather.weatherCode, currentLang);
+  pageTitle = `${name} ${getTranslation('weather', currentLang)}: ${currentWeather.temperature}°C - ${getTranslation('appTitle', currentLang)}`;
+  pageDescription = `${getTranslation('currentWeatherIn', currentLang)} ${name}: ${currentWeather.temperature}°C, ${weatherCondition}. ${getTranslation('getAccurateForecasts', currentLang)}`;
 } catch (e) {
   error = e.message;
   console.error('Error fetching initial weather data:', e);
 }
 ---
 
-<Layout title={getTranslation('appTitle', currentLang)}>
+<Layout 
+  title={pageTitle}
+  description={pageDescription}
+  lang={currentLang}
+  city={currentWeather?.city}
+  temperature={currentWeather?.temperature}
+  weatherCondition={weatherCondition}
+>
   <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Breadcrumb for SEO -->
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+        <li>
+          <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400">
+            {getTranslation('home', currentLang)}
+          </a>
+        </li>
+        {currentWeather?.city && (
+          <>
+            <li>
+              <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </li>
+            <li class="text-gray-900 dark:text-white font-medium">
+              {currentWeather.city} {getTranslation('weather', currentLang)}
+            </li>
+          </>
+        )}
+      </ol>
+    </nav>
+
     <!-- Header with title and settings -->
-    <div class="flex justify-between items-center mb-8">
+    <header class="flex justify-between items-center mb-8">
       <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
         {getTranslation('appTitle', currentLang)}
       </h1>
@@ -34,23 +72,24 @@ try {
         id="settings-btn"
         class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 p-3 rounded-xl shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-600 group"
         title={getTranslation('settings', currentLang)}
+        aria-label={getTranslation('openSettings', currentLang)}
       >
         <svg class="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
       </button>
-    </div>
+    </header>
     
     <!-- Settings Panel -->
-    <div id="settings-panel" class="hidden mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+    <section id="settings-panel" class="hidden mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden" aria-labelledby="settings-title">
       <div class="p-6">
-        <h2 class="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center">
+        <h2 id="settings-title" class="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          <span id="settings-title">{getTranslation('settings', currentLang)}</span>
+          <span>{getTranslation('settings', currentLang)}</span>
         </h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -59,10 +98,12 @@ try {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" id="theme-label">
               {getTranslation('theme', currentLang)}
             </label>
-            <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1" role="radiogroup" aria-labelledby="theme-label">
               <button 
                 id="light-theme-btn"
                 class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 theme-btn"
+                role="radio"
+                aria-checked="false"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -72,6 +113,8 @@ try {
               <button 
                 id="dark-theme-btn"
                 class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 theme-btn"
+                role="radio"
+                aria-checked="false"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -86,10 +129,12 @@ try {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" id="language-label">
               {getTranslation('language', currentLang)}
             </label>
-            <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1" role="radiogroup" aria-labelledby="language-label">
               <button 
                 id="english-btn"
                 class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 lang-btn"
+                role="radio"
+                aria-checked="false"
               >
                 <span class="mr-2">🇺🇸</span>
                 <span id="english-text">{getTranslation('english', currentLang)}</span>
@@ -97,6 +142,8 @@ try {
               <button 
                 id="spanish-btn"
                 class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 lang-btn"
+                role="radio"
+                aria-checked="false"
               >
                 <span class="mr-2">🇪🇸</span>
                 <span id="spanish-text">{getTranslation('spanish', currentLang)}</span>
@@ -105,52 +152,65 @@ try {
           </div>
         </div>
       </div>
-    </div>
+    </section>
     
-    <form id="search-form" class="mb-8">
-      <div class="flex justify-center space-x-4 max-w-md mx-auto relative">
-        <div class="relative flex-grow">
-          <input
-            type="text"
-            id="city-input"
-            placeholder={getTranslation('searchPlaceholder', currentLang)}
-            class="border-2 border-gray-300 dark:border-gray-600 p-3 rounded-xl w-full bg-white dark:bg-gray-800 focus:border-blue-500 focus:outline-none transition-colors duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-            value={defaultCity}
-            autocomplete="off"
-          />
-          <div id="suggestions-dropdown" class="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden">
-            <!-- Suggestions will be populated here -->
+    <!-- Search Form -->
+    <section class="mb-8" aria-labelledby="search-heading">
+      <h2 id="search-heading" class="sr-only">{getTranslation('searchWeather', currentLang)}</h2>
+      <form id="search-form">
+        <div class="flex justify-center space-x-4 max-w-md mx-auto relative">
+          <div class="relative flex-grow">
+            <label for="city-input" class="sr-only">{getTranslation('searchPlaceholder', currentLang)}</label>
+            <input
+              type="text"
+              id="city-input"
+              name="city"
+              placeholder={getTranslation('searchPlaceholder', currentLang)}
+              class="border-2 border-gray-300 dark:border-gray-600 p-3 rounded-xl w-full bg-white dark:bg-gray-800 focus:border-blue-500 focus:outline-none transition-colors duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              value={defaultCity}
+              autocomplete="off"
+              aria-describedby="search-help"
+            />
+            <div id="search-help" class="sr-only">{getTranslation('searchHelp', currentLang)}</div>
+            <div id="suggestions-dropdown" class="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto hidden" role="listbox">
+              <!-- Suggestions will be populated here -->
+            </div>
           </div>
+          <button 
+            type="button" 
+            id="location-btn"
+            class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center"
+            title={getTranslation('useCurrentLocation', currentLang)}
+            aria-label={getTranslation('useCurrentLocation', currentLang)}
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </button>
+          <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-300 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105" id="search-button">
+            {getTranslation('searchButton', currentLang)}
+          </button>
         </div>
-        <button 
-          type="button" 
-          id="location-btn"
-          class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center"
-          title={getTranslation('useCurrentLocation', currentLang)}
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-        </button>
-        <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-300 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105" id="search-button">
-          {getTranslation('searchButton', currentLang)}
-        </button>
-      </div>
-    </form>
+      </form>
+    </section>
     
-    <div id="weather-container">
+    <!-- Weather Display Section -->
+    <section id="weather-container" aria-labelledby="weather-heading">
+      <h2 id="weather-heading" class="sr-only">
+        {currentWeather?.city ? `${getTranslation('weatherFor', currentLang)} ${currentWeather.city}` : getTranslation('weatherInformation', currentLang)}
+      </h2>
       {error ? (
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
           <p class="text-red-600 dark:text-red-400 text-lg">{error}</p>
         </div>
       ) : (
         <WeatherDisplay weatherData={currentWeather} currentLang={currentLang} />
       )}
-    </div>
+    </section>
 
     <!-- Location permission modal -->
-    <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" role="dialog" aria-labelledby="modal-title" aria-describedby="modal-text">
       <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md mx-4 shadow-2xl">
         <div class="text-center">
           <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
@@ -236,13 +296,17 @@ try {
     if (theme === 'light') {
       lightBtn?.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
       lightBtn?.classList.remove('text-gray-600', 'hover:text-gray-900');
+      lightBtn?.setAttribute('aria-checked', 'true');
       darkBtn?.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
       darkBtn?.classList.add('text-gray-600', 'hover:text-gray-900');
+      darkBtn?.setAttribute('aria-checked', 'false');
     } else {
       darkBtn?.classList.add('bg-gray-600', 'text-white', 'shadow-sm');
       darkBtn?.classList.remove('text-gray-400', 'hover:text-gray-200');
+      darkBtn?.setAttribute('aria-checked', 'true');
       lightBtn?.classList.remove('bg-gray-600', 'text-white', 'shadow-sm');
       lightBtn?.classList.add('text-gray-400', 'hover:text-gray-200');
+      lightBtn?.setAttribute('aria-checked', 'false');
     }
   }
 
@@ -253,13 +317,17 @@ try {
     if (lang === 'en') {
       englishBtn?.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
       englishBtn?.classList.remove('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+      englishBtn?.setAttribute('aria-checked', 'true');
       spanishBtn?.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
       spanishBtn?.classList.add('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+      spanishBtn?.setAttribute('aria-checked', 'false');
     } else {
       spanishBtn?.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
       spanishBtn?.classList.remove('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+      spanishBtn?.setAttribute('aria-checked', 'true');
       englishBtn?.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
       englishBtn?.classList.add('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+      englishBtn?.setAttribute('aria-checked', 'false');
     }
   }
 
@@ -292,6 +360,26 @@ try {
         }
       }
     });
+
+    // Update page title and meta description when language changes
+    updatePageSEO(lang);
+  }
+
+  function updatePageSEO(lang: Language) {
+    // Update document title
+    const titleElement = document.querySelector('title');
+    const currentCity = cityInput?.value.trim();
+    if (titleElement && currentCity) {
+      titleElement.textContent = `${currentCity} ${getTranslation('weather', lang)} - ${getTranslation('appTitle', lang)}`;
+    }
+
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription && currentCity) {
+      metaDescription.setAttribute('content', 
+        `${getTranslation('currentWeatherIn', lang)} ${currentCity}. ${getTranslation('getAccurateForecasts', lang)}`
+      );
+    }
   }
 
   function getWeatherIcon(code: number): string {
@@ -423,7 +511,7 @@ try {
     }
 
     suggestionsDropdown.innerHTML = suggestions.map((suggestion, index) => `
-      <div class="suggestion-item p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${index === selectedSuggestionIndex ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" data-index="${index}">
+      <div class="suggestion-item p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${index === selectedSuggestionIndex ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" data-index="${index}" role="option" aria-selected="${index === selectedSuggestionIndex}">
         <div class="font-medium text-gray-900 dark:text-white">${suggestion.name}</div>
         <div class="text-sm text-gray-600 dark:text-gray-400">
           ${[suggestion.admin2, suggestion.admin1, suggestion.country].filter(Boolean).join(', ')}
@@ -495,11 +583,12 @@ try {
             cityInput.value = cityName;
             
             displayWeatherData(currentWeather);
+            updatePageSEO(currentLang);
             resolve(currentWeather);
           } catch (error) {
             console.error('Error fetching weather for current location:', error);
             weatherContainer.innerHTML = `
-              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
                 <p class="text-red-600 dark:text-red-400 text-lg">${getTranslation('failedToGetWeather', currentLang)}</p>
               </div>
             `;
@@ -524,7 +613,7 @@ try {
           }
           
           weatherContainer.innerHTML = `
-            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
               <p class="text-red-600 dark:text-red-400 text-lg">${errorMessage}</p>
             </div>
           `;
@@ -750,10 +839,11 @@ try {
       const weatherData = await getWeatherData(latitude, longitude);
       const currentWeather = processWeatherData(weatherData, cityName, latitude);
       displayWeatherData(currentWeather);
+      updatePageSEO(currentLang);
     } catch (error) {
       console.error('Error fetching weather data:', error);
       weatherContainer.innerHTML = `
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
           <p class="text-red-600 dark:text-red-400 text-lg">${getTranslation('failedToFetch', currentLang)}</p>
         </div>
       `;
@@ -929,7 +1019,7 @@ try {
     } catch (error) {
       console.error('Error fetching weather data:', error);
       weatherContainer.innerHTML = `
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center" role="alert">
           <p class="text-red-600 dark:text-red-400 text-lg">${getTranslation('cityNotFound', currentLang)}</p>
         </div>
       `;

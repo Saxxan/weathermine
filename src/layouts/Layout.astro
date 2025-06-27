@@ -1,26 +1,156 @@
 ---
+import { getTranslation, type Language } from '../utils/i18n';
+
 interface Props {
   title: string;
+  description?: string;
+  lang?: Language;
+  city?: string;
+  temperature?: number;
+  weatherCondition?: string;
+  canonical?: string;
 }
 
-const { title } = Astro.props;
+const { 
+  title, 
+  description, 
+  lang = 'en', 
+  city, 
+  temperature, 
+  weatherCondition,
+  canonical 
+} = Astro.props;
+
+// Generate dynamic description based on weather data
+const defaultDescription = city && temperature && weatherCondition 
+  ? `Current weather in ${city}: ${temperature}°C, ${weatherCondition}. Get accurate weather forecasts and hourly predictions.`
+  : getTranslation('appDescription', lang);
+
+const metaDescription = description || defaultDescription;
+const pageTitle = city && temperature 
+  ? `${city} Weather: ${temperature}°C - ${title}`
+  : title;
+
+// Structured data for weather information
+const structuredData = city && temperature && weatherCondition ? {
+  "@context": "https://schema.org",
+  "@type": "WeatherForecast",
+  "location": {
+    "@type": "Place",
+    "name": city
+  },
+  "temperature": {
+    "@type": "QuantitativeValue",
+    "value": temperature,
+    "unitCode": "CEL"
+  },
+  "weatherCondition": weatherCondition,
+  "provider": {
+    "@type": "Organization",
+    "name": "WeatherMine",
+    "url": "https://weathermine.app"
+  }
+} : null;
+
+const currentUrl = canonical || Astro.url.href;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Astro description" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>{pageTitle}</title>
+    <meta name="title" content={pageTitle} />
+    <meta name="description" content={metaDescription} />
+    <meta name="keywords" content={getTranslation('keywords', lang)} />
+    <meta name="author" content="WeatherMine" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href={currentUrl} />
+    
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="en" href={currentUrl.replace(/\?.*$/, '')} />
+    <link rel="alternate" hreflang="es" href={currentUrl.replace(/\?.*$/, '') + '?lang=es'} />
+    <link rel="alternate" hreflang="x-default" href={currentUrl.replace(/\?.*$/, '')} />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={currentUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:image" content="/weather-og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`WeatherMine - ${city ? `Weather in ${city}` : 'Weather Forecast App'}`} />
+    <meta property="og:site_name" content="WeatherMine" />
+    <meta property="og:locale" content={lang === 'es' ? 'es_ES' : 'en_US'} />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={currentUrl} />
+    <meta property="twitter:title" content={pageTitle} />
+    <meta property="twitter:description" content={metaDescription} />
+    <meta property="twitter:image" content="/weather-og-image.jpg" />
+    <meta property="twitter:image:alt" content={`WeatherMine - ${city ? `Weather in ${city}` : 'Weather Forecast App'}`} />
+    <meta name="twitter:creator" content="@weathermine" />
+    <meta name="twitter:site" content="@weathermine" />
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="msapplication-TileColor" content="#3B82F6" />
+    
+    <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.open-meteo.com" />
+    <link rel="preconnect" href="https://geocoding-api.open-meteo.com" />
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//api.open-meteo.com" />
+    
+    <!-- Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
+    
+    <!-- Structured Data -->
+    {structuredData && (
+      <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    )}
+    
+    <!-- Additional structured data for the app -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "WeatherMine",
+        "description": "Get accurate weather forecasts and hourly predictions for any city worldwide",
+        "url": "https://weathermine.app",
+        "applicationCategory": "Weather",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "WeatherMine"
+        }
+      }
+    </script>
   </head>
   <body class="bg-zinc-100 text-gray-900 dark:bg-gray-900 dark:text-zinc-100">
     <slot />
@@ -40,7 +170,7 @@ const { title } = Astro.props;
   }
 
   body {
-    min-heigth: 100svh;
+    min-height: 100svh;
     font-family: "Montserrat", sans-serif;
   }
 

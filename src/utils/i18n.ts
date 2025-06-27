@@ -2,6 +2,7 @@ export const translations = {
   en: {
     // App title and main UI
     appTitle: "WeatherMine",
+    appDescription: "Get accurate weather forecasts and hourly predictions for any city worldwide. Real-time weather data with detailed hourly forecasts.",
     searchPlaceholder: "Enter city or village",
     searchButton: "Search",
     useCurrentLocation: "Use current location",
@@ -19,6 +20,7 @@ export const translations = {
     feelsLike: "Feels Like",
     sunrise: "Sunrise",
     sunset: "Sunset",
+    weather: "Weather",
     
     // Time and seasons
     day: "Day",
@@ -59,11 +61,25 @@ export const translations = {
     light: "Light",
     dark: "Dark",
     english: "English",
-    spanish: "Spanish"
+    spanish: "Spanish",
+    openSettings: "Open settings",
+    
+    // Navigation and SEO
+    home: "Home",
+    searchWeather: "Search Weather",
+    searchHelp: "Type at least 2 characters to see suggestions",
+    weatherFor: "Weather for",
+    weatherInformation: "Weather Information",
+    currentWeatherIn: "Current weather in",
+    getAccurateForecasts: "Get accurate weather forecasts and hourly predictions.",
+    
+    // SEO Keywords
+    keywords: "weather, forecast, temperature, humidity, wind, rain, snow, hourly forecast, weather app, meteorology, climate"
   },
   es: {
     // App title and main UI
     appTitle: "WeatherMine",
+    appDescription: "Obtén pronósticos meteorológicos precisos y predicciones por horas para cualquier ciudad del mundo. Datos meteorológicos en tiempo real con pronósticos detallados por horas.",
     searchPlaceholder: "Ingresa ciudad o pueblo",
     searchButton: "Buscar",
     useCurrentLocation: "Usar ubicación actual",
@@ -81,6 +97,7 @@ export const translations = {
     feelsLike: "Sensación",
     sunrise: "Amanecer",
     sunset: "Atardecer",
+    weather: "Clima",
     
     // Time and seasons
     day: "Día",
@@ -121,7 +138,20 @@ export const translations = {
     light: "Claro",
     dark: "Oscuro",
     english: "Inglés",
-    spanish: "Español"
+    spanish: "Español",
+    openSettings: "Abrir configuración",
+    
+    // Navigation and SEO
+    home: "Inicio",
+    searchWeather: "Buscar Clima",
+    searchHelp: "Escribe al menos 2 caracteres para ver sugerencias",
+    weatherFor: "Clima para",
+    weatherInformation: "Información del Clima",
+    currentWeatherIn: "Clima actual en",
+    getAccurateForecasts: "Obtén pronósticos meteorológicos precisos y predicciones por horas.",
+    
+    // SEO Keywords
+    keywords: "clima, pronóstico, temperatura, humedad, viento, lluvia, nieve, pronóstico por horas, app del clima, meteorología, tiempo"
   }
 };
 
