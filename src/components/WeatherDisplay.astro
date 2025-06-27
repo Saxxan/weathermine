@@ -1,5 +1,5 @@
 ---
-import { getWeatherDescription, getCurrentLanguage } from "../utils/weather";
+import { getWeatherDescription } from "../utils/weather";
 import { getTranslation } from "../utils/i18n";
 
 interface WeatherData {
@@ -24,8 +24,12 @@ interface WeatherData {
   hourlyHumidity: number[];
 }
 
-const { weatherData } = Astro.props;
-const currentLang = getCurrentLanguage();
+interface Props {
+  weatherData: WeatherData;
+  currentLang: 'en' | 'es';
+}
+
+const { weatherData, currentLang } = Astro.props;
 
 function getWeatherIcon(code: number): string {
   if (code <= 3) return `
