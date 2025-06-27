@@ -1,41 +1,50 @@
-export function getWeatherDescription(code: number): string {
-  if (code <= 3) return "Clear";
-  if (code <= 48) return "Cloudy";
-  if (code <= 67) return "Rainy";
-  if (code <= 77) return "Snowy";
-  return "Stormy";
+import { getTranslation, getCurrentLanguage, type Language } from './i18n';
+
+export function getWeatherDescription(code: number, lang?: Language): string {
+  const currentLang = lang || getCurrentLanguage();
+  
+  if (code <= 3) return getTranslation("clear", currentLang);
+  if (code <= 48) return getTranslation("cloudy", currentLang);
+  if (code <= 67) return getTranslation("rainy", currentLang);
+  if (code <= 77) return getTranslation("snowy", currentLang);
+  return getTranslation("stormy", currentLang);
 }
 
-export function getSeason(date: Date, latitude: number): string {
+export function getSeason(date: Date, latitude: number, lang?: Language): string {
+  const currentLang = lang || getCurrentLanguage();
   const month = date.getMonth() + 1; // getMonth() returns 0-11
   const day = date.getDate();
   
   // Determine hemisphere
   const isNorthernHemisphere = latitude >= 0;
   
+  let season: string;
+  
   if (isNorthernHemisphere) {
     // Northern Hemisphere seasons
     if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 20)) {
-      return "Winter";
+      season = "winter";
     } else if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) {
-      return "Spring";
+      season = "spring";
     } else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) {
-      return "Summer";
+      season = "summer";
     } else {
-      return "Autumn";
+      season = "autumn";
     }
   } else {
     // Southern Hemisphere seasons (opposite)
     if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 20)) {
-      return "Summer";
+      season = "summer";
     } else if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) {
-      return "Autumn";
+      season = "autumn";
     } else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) {
-      return "Winter";
+      season = "winter";
     } else {
-      return "Spring";
+      season = "spring";
     }
   }
+  
+  return getTranslation(season, currentLang);
 }
 
 export function isDayTime(currentTime: Date, sunrise: Date, sunset: Date): boolean {
@@ -58,6 +67,7 @@ export function processWeatherData(weatherData: any, cityName: string, latitude:
   const current = weatherData?.current ?? {};
   const daily = weatherData?.daily ?? {};
   const hourly = weatherData?.hourly ?? {};
+  const currentLang = getCurrentLanguage();
   
   // Get current time in the location's timezone
   const currentTime = new Date();
@@ -70,7 +80,7 @@ export function processWeatherData(weatherData: any, cityName: string, latitude:
   const isDay = isDayTime(currentTime, sunrise, sunset);
   
   // Get season
-  const season = getSeason(currentTime, latitude);
+  const season = getSeason(currentTime, latitude, currentLang);
 
   return {
     city: cityName,
@@ -83,7 +93,7 @@ export function processWeatherData(weatherData: any, cityName: string, latitude:
     currentTime: formatTime(currentTime),
     season: season,
     isDay: isDay,
-    dayNight: isDay ? 'Day' : 'Night',
+    dayNight: isDay ? getTranslation('day', currentLang) : getTranslation('night', currentLang),
     sunrise: formatTime(sunrise),
     sunset: formatTime(sunset),
     hourlyPrecipitation: (hourly.precipitation_probability ?? []).slice(0, 24),

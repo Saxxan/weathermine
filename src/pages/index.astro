@@ -3,8 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import WeatherDisplay from '../components/WeatherDisplay.astro';
 import { getCoordinates, getWeatherData } from '../utils/api';
 import { processWeatherData } from '../utils/weather';
+import { getTranslation, getCurrentLanguage } from '../utils/i18n';
 
 const defaultCity = "Madrid";
+const currentLang = getCurrentLanguage();
 
 let currentWeather;
 let error = null;
@@ -19,11 +21,91 @@ try {
 }
 ---
 
-<Layout title="Weather App">
+<Layout title={getTranslation('appTitle', currentLang)}>
   <main class="container mx-auto px-4 py-8 max-w-4xl">
-    <h1 class="text-5xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-      WeatherMine
-    </h1>
+    <!-- Header with title and settings -->
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        {getTranslation('appTitle', currentLang)}
+      </h1>
+      
+      <!-- Settings Button -->
+      <button 
+        id="settings-btn"
+        class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 p-3 rounded-xl shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-600 group"
+        title={getTranslation('settings', currentLang)}
+      >
+        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="hidden mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+      <div class="p-6">
+        <h2 class="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span id="settings-title">{getTranslation('settings', currentLang)}</span>
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Theme Toggle -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" id="theme-label">
+              {getTranslation('theme', currentLang)}
+            </label>
+            <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <button 
+                id="light-theme-btn"
+                class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 theme-btn"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <span id="light-text">{getTranslation('light', currentLang)}</span>
+              </button>
+              <button 
+                id="dark-theme-btn"
+                class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 theme-btn"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+                <span id="dark-text">{getTranslation('dark', currentLang)}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Language Toggle -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" id="language-label">
+              {getTranslation('language', currentLang)}
+            </label>
+            <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <button 
+                id="english-btn"
+                class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 lang-btn"
+              >
+                <span class="mr-2">🇺🇸</span>
+                <span id="english-text">{getTranslation('english', currentLang)}</span>
+              </button>
+              <button 
+                id="spanish-btn"
+                class="flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 lang-btn"
+              >
+                <span class="mr-2">🇪🇸</span>
+                <span id="spanish-text">{getTranslation('spanish', currentLang)}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <form id="search-form" class="mb-8">
       <div class="flex justify-center space-x-4 max-w-md mx-auto relative">
@@ -31,7 +113,7 @@ try {
           <input
             type="text"
             id="city-input"
-            placeholder="Enter city or village"
+            placeholder={getTranslation('searchPlaceholder', currentLang)}
             class="border-2 border-gray-300 dark:border-gray-600 p-3 rounded-xl w-full bg-white dark:bg-gray-800 focus:border-blue-500 focus:outline-none transition-colors duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             value={defaultCity}
             autocomplete="off"
@@ -44,15 +126,15 @@ try {
           type="button" 
           id="location-btn"
           class="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center"
-          title="Use current location"
+          title={getTranslation('useCurrentLocation', currentLang)}
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
         </button>
-        <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-300 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
-          Search
+        <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-300 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105" id="search-button">
+          {getTranslation('searchButton', currentLang)}
         </button>
       </div>
     </form>
@@ -77,24 +159,24 @@ try {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            Enable Location Access
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2" id="modal-title">
+            {getTranslation('enableLocationTitle', currentLang)}
           </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Allow WeatherMine to access your location to show weather for your current area.
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="modal-text">
+            {getTranslation('enableLocationText', currentLang)}
           </p>
           <div class="flex space-x-3">
             <button 
               id="allow-location" 
               class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
             >
-              Allow
+              {getTranslation('allow', currentLang)}
             </button>
             <button 
               id="deny-location" 
               class="flex-1 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
             >
-              Not Now
+              {getTranslation('notNow', currentLang)}
             </button>
           </div>
         </div>
@@ -106,23 +188,111 @@ try {
 <script>
   import { getCoordinates, getWeatherData, searchCities, getCityFromCoordinates } from '../utils/api';
   import { processWeatherData, getWeatherDescription } from '../utils/weather';
+  import { getTranslation, getCurrentLanguage, setLanguage, getCurrentTheme, setTheme, type Language } from '../utils/i18n';
 
   const form = document.getElementById('search-form');
-  const cityInput = document.getElementById('city-input');
+  const cityInput = document.getElementById('city-input') as HTMLInputElement;
   const locationBtn = document.getElementById('location-btn');
   const suggestionsDropdown = document.getElementById('suggestions-dropdown');
   const weatherContainer = document.getElementById('weather-container');
   const locationModal = document.getElementById('location-modal');
   const allowLocationBtn = document.getElementById('allow-location');
   const denyLocationBtn = document.getElementById('deny-location');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsPanel = document.getElementById('settings-panel');
+  const lightThemeBtn = document.getElementById('light-theme-btn');
+  const darkThemeBtn = document.getElementById('dark-theme-btn');
+  const englishBtn = document.getElementById('english-btn');
+  const spanishBtn = document.getElementById('spanish-btn');
 
   let debounceTimer;
   let selectedSuggestionIndex = -1;
   let suggestions = [];
+  let currentLang: Language = getCurrentLanguage();
 
   // Check if user has previously denied location or if we should ask
   const hasAskedForLocation = localStorage.getItem('locationAsked');
   const locationDenied = localStorage.getItem('locationDenied');
+
+  // Initialize theme and language
+  function initializeSettings() {
+    const theme = getCurrentTheme();
+    const lang = getCurrentLanguage();
+    
+    // Set theme
+    setTheme(theme);
+    updateThemeButtons(theme);
+    
+    // Set language
+    currentLang = lang;
+    updateLanguageButtons(lang);
+    updateUILanguage(lang);
+  }
+
+  function updateThemeButtons(theme: 'light' | 'dark') {
+    const lightBtn = lightThemeBtn;
+    const darkBtn = darkThemeBtn;
+    
+    if (theme === 'light') {
+      lightBtn?.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+      lightBtn?.classList.remove('text-gray-600', 'hover:text-gray-900');
+      darkBtn?.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+      darkBtn?.classList.add('text-gray-600', 'hover:text-gray-900');
+    } else {
+      darkBtn?.classList.add('bg-gray-600', 'text-white', 'shadow-sm');
+      darkBtn?.classList.remove('text-gray-400', 'hover:text-gray-200');
+      lightBtn?.classList.remove('bg-gray-600', 'text-white', 'shadow-sm');
+      lightBtn?.classList.add('text-gray-400', 'hover:text-gray-200');
+    }
+  }
+
+  function updateLanguageButtons(lang: Language) {
+    const englishBtn = document.getElementById('english-btn');
+    const spanishBtn = document.getElementById('spanish-btn');
+    
+    if (lang === 'en') {
+      englishBtn?.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+      englishBtn?.classList.remove('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+      spanishBtn?.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+      spanishBtn?.classList.add('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+    } else {
+      spanishBtn?.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+      spanishBtn?.classList.remove('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+      englishBtn?.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+      englishBtn?.classList.add('text-gray-600', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-gray-200');
+    }
+  }
+
+  function updateUILanguage(lang: Language) {
+    // Update all translatable elements
+    const elements = {
+      'city-input': { attr: 'placeholder', key: 'searchPlaceholder' },
+      'search-button': { text: 'searchButton' },
+      'location-btn': { attr: 'title', key: 'useCurrentLocation' },
+      'settings-title': { text: 'settings' },
+      'theme-label': { text: 'theme' },
+      'language-label': { text: 'language' },
+      'light-text': { text: 'light' },
+      'dark-text': { text: 'dark' },
+      'english-text': { text: 'english' },
+      'spanish-text': { text: 'spanish' },
+      'modal-title': { text: 'enableLocationTitle' },
+      'modal-text': { text: 'enableLocationText' },
+      'allow-location': { text: 'allow' },
+      'deny-location': { text: 'notNow' }
+    };
+
+    Object.entries(elements).forEach(([id, config]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        if ('attr' in config) {
+          element.setAttribute(config.attr, getTranslation(config.key, lang));
+        } else {
+          element.textContent = getTranslation(config.text, lang);
+        }
+      }
+    });
+  }
 
   function getWeatherIcon(code: number): string {
     if (code <= 3) return `
@@ -166,36 +336,37 @@ try {
   }
 
   function getSeasonIcon(season: string): string {
-    switch(season.toLowerCase()) {
-      case 'spring':
-        return `
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-          </svg>
-        `;
-      case 'summer':
-        return `
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-        `;
-      case 'autumn':
-      case 'fall':
-        return `
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-          </svg>
-        `;
-      case 'winter':
-        return `
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-          </svg>
-        `;
-      default:
-        return getClockIcon();
+    const seasonLower = season.toLowerCase();
+    if (seasonLower.includes('spring') || seasonLower.includes('primavera')) {
+      return `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+      `;
     }
+    if (seasonLower.includes('summer') || seasonLower.includes('verano')) {
+      return `
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      `;
+    }
+    if (seasonLower.includes('autumn') || seasonLower.includes('fall') || seasonLower.includes('otoño')) {
+      return `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+      `;
+    }
+    if (seasonLower.includes('winter') || seasonLower.includes('invierno')) {
+      return `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+        </svg>
+      `;
+    }
+    return getClockIcon();
   }
 
   function getDayNightIcon(isDay: boolean): string {
@@ -290,7 +461,7 @@ try {
   async function getCurrentLocationWeather() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser'));
+        reject(new Error(getTranslation('unableToGetLocation', currentLang)));
         return;
       }
 
@@ -298,7 +469,7 @@ try {
       weatherContainer.innerHTML = `
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p class="text-gray-600 dark:text-gray-400">Getting your location...</p>
+          <p class="text-gray-600 dark:text-gray-400">${getTranslation('gettingLocation', currentLang)}</p>
         </div>
       `;
 
@@ -311,7 +482,7 @@ try {
             weatherContainer.innerHTML = `
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-                <p class="text-gray-600 dark:text-gray-400">Loading weather for your location...</p>
+                <p class="text-gray-600 dark:text-gray-400">${getTranslation('loadingWeather', currentLang)}</p>
               </div>
             `;
 
@@ -329,7 +500,7 @@ try {
             console.error('Error fetching weather for current location:', error);
             weatherContainer.innerHTML = `
               <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-                <p class="text-red-600 dark:text-red-400 text-lg">Failed to get weather for your location</p>
+                <p class="text-red-600 dark:text-red-400 text-lg">${getTranslation('failedToGetWeather', currentLang)}</p>
               </div>
             `;
             reject(error);
@@ -337,18 +508,18 @@ try {
         },
         (error) => {
           console.error('Geolocation error:', error);
-          let errorMessage = 'Unable to get your location';
+          let errorMessage = getTranslation('unableToGetLocation', currentLang);
           
           switch(error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied. Please enable location permissions.';
+              errorMessage = getTranslation('locationDenied', currentLang);
               localStorage.setItem('locationDenied', 'true');
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information unavailable.';
+              errorMessage = getTranslation('locationUnavailable', currentLang);
               break;
             case error.TIMEOUT:
-              errorMessage = 'Location request timed out.';
+              errorMessage = getTranslation('locationTimeout', currentLang);
               break;
           }
           
@@ -377,7 +548,7 @@ try {
     
     return `
       <div class="p-6">
-        <h3 class="text-lg font-semibold mb-4 dark:text-white">24-Hour Forecast</h3>
+        <h3 class="text-lg font-semibold mb-4 dark:text-white">${getTranslation('hourlyForecast', currentLang)}</h3>
         <div class="overflow-x-auto">
           <div class="flex space-x-3 pb-2" style="min-width: max-content;">
             ${currentWeather.hourlyTime.slice(0, hourlyDataLength).map((time, index) => {
@@ -410,7 +581,7 @@ try {
                       <svg class="w-3 h-3 text-blue-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 14.25c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"/>
                       </svg>
-                      <span class="text-xs text-gray-600 dark:text-gray-400">Rain</span>
+                      <span class="text-xs text-gray-600 dark:text-gray-400">${getTranslation('rain', currentLang)}</span>
                     </div>
                     <div class="flex items-end justify-center mb-1 h-6">
                       <div 
@@ -446,7 +617,7 @@ try {
                       <svg class="w-3 h-3 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1a3 3 0 010 6h-1m8-6h1a3 3 0 010 6h-1m-9-6h1a3 3 0 010 6h-1"/>
                       </svg>
-                      <span class="text-xs text-gray-600 dark:text-gray-400">Wind</span>
+                      <span class="text-xs text-gray-600 dark:text-gray-400">${getTranslation('wind', currentLang)}</span>
                     </div>
                     <p class="text-xs font-semibold text-green-600 dark:text-green-400 text-center">${currentWeather.hourlyWindSpeed[index]} km/h</p>
                   </div>
@@ -504,7 +675,7 @@ try {
           <div class="flex items-center justify-center mb-6">
             <div class="text-center mr-6">
               <div class="flex justify-center mb-2">${getWeatherIcon(currentWeather.weatherCode)}</div>
-              <p class="text-lg opacity-90">${getWeatherDescription(currentWeather.weatherCode)}</p>
+              <p class="text-lg opacity-90">${getWeatherDescription(currentWeather.weatherCode, currentLang)}</p>
             </div>
             <div class="text-center">
               <p class="text-6xl font-light mb-2">${currentWeather.temperature}°</p>
@@ -518,7 +689,7 @@ try {
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1a3 3 0 010 6h-1m8-6h1a3 3 0 010 6h-1m-9-6h1a3 3 0 010 6h-1"/>
                 </svg>
-                <span class="ml-2 text-sm opacity-75">Wind</span>
+                <span class="ml-2 text-sm opacity-75">${getTranslation('wind', currentLang)}</span>
               </div>
               <p class="text-lg font-semibold">${currentWeather.windSpeed} km/h</p>
             </div>
@@ -527,7 +698,7 @@ try {
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
                 </svg>
-                <span class="ml-2 text-sm opacity-75">Humidity</span>
+                <span class="ml-2 text-sm opacity-75">${getTranslation('humidity', currentLang)}</span>
               </div>
               <p class="text-lg font-semibold">${currentWeather.humidity}%</p>
             </div>
@@ -536,7 +707,7 @@ try {
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                <span class="ml-2 text-sm opacity-75">Feels Like</span>
+                <span class="ml-2 text-sm opacity-75">${getTranslation('feelsLike', currentLang)}</span>
               </div>
               <p class="text-lg font-semibold">${currentWeather.temperature}°C</p>
             </div>
@@ -547,14 +718,14 @@ try {
             <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
               <div class="flex items-center mb-1">
                 ${getSunriseIcon()}
-                <span class="ml-2 text-sm opacity-75">Sunrise</span>
+                <span class="ml-2 text-sm opacity-75">${getTranslation('sunrise', currentLang)}</span>
               </div>
               <p class="text-lg font-semibold">${currentWeather.sunrise}</p>
             </div>
             <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
               <div class="flex items-center mb-1">
                 ${getSunsetIcon()}
-                <span class="ml-2 text-sm opacity-75">Sunset</span>
+                <span class="ml-2 text-sm opacity-75">${getTranslation('sunset', currentLang)}</span>
               </div>
               <p class="text-lg font-semibold">${currentWeather.sunset}</p>
             </div>
@@ -571,7 +742,7 @@ try {
     weatherContainer.innerHTML = `
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p class="text-gray-600 dark:text-gray-400">Loading weather data...</p>
+        <p class="text-gray-600 dark:text-gray-400">${getTranslation('loadingWeatherData', currentLang)}</p>
       </div>
     `;
 
@@ -583,11 +754,68 @@ try {
       console.error('Error fetching weather data:', error);
       weatherContainer.innerHTML = `
         <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-          <p class="text-red-600 dark:text-red-400 text-lg">${error.message}</p>
+          <p class="text-red-600 dark:text-red-400 text-lg">${getTranslation('failedToFetch', currentLang)}</p>
         </div>
       `;
     }
   }
+
+  // Initialize settings on page load
+  initializeSettings();
+
+  // Settings panel toggle
+  settingsBtn?.addEventListener('click', () => {
+    settingsPanel?.classList.toggle('hidden');
+  });
+
+  // Theme toggle handlers
+  lightThemeBtn?.addEventListener('click', () => {
+    setTheme('light');
+    updateThemeButtons('light');
+  });
+
+  darkThemeBtn?.addEventListener('click', () => {
+    setTheme('dark');
+    updateThemeButtons('dark');
+  });
+
+  // Language toggle handlers
+  englishBtn?.addEventListener('click', () => {
+    setLanguage('en');
+    currentLang = 'en';
+    updateLanguageButtons('en');
+    updateUILanguage('en');
+    // Refresh weather data with new language
+    if (weatherContainer.innerHTML && !weatherContainer.innerHTML.includes('animate-spin')) {
+      // Re-fetch current weather data to update language
+      const cityValue = cityInput.value.trim();
+      if (cityValue) {
+        form.dispatchEvent(new Event('submit'));
+      }
+    }
+  });
+
+  spanishBtn?.addEventListener('click', () => {
+    setLanguage('es');
+    currentLang = 'es';
+    updateLanguageButtons('es');
+    updateUILanguage('es');
+    // Refresh weather data with new language
+    if (weatherContainer.innerHTML && !weatherContainer.innerHTML.includes('animate-spin')) {
+      // Re-fetch current weather data to update language
+      const cityValue = cityInput.value.trim();
+      if (cityValue) {
+        form.dispatchEvent(new Event('submit'));
+      }
+    }
+  });
+
+  // Close settings panel when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!settingsBtn?.contains(e.target) && !settingsPanel?.contains(e.target)) {
+      settingsPanel?.classList.add('hidden');
+    }
+  });
 
   // Auto-request location on first visit (if not previously denied)
   if (!hasAskedForLocation && !locationDenied) {
@@ -597,7 +825,7 @@ try {
   }
 
   // Location button click handler
-  locationBtn.addEventListener('click', () => {
+  locationBtn?.addEventListener('click', () => {
     if (locationDenied === 'true') {
       showLocationModal();
     } else {
@@ -606,21 +834,21 @@ try {
   });
 
   // Modal event handlers
-  allowLocationBtn.addEventListener('click', () => {
+  allowLocationBtn?.addEventListener('click', () => {
     hideLocationModal();
     localStorage.setItem('locationAsked', 'true');
     localStorage.removeItem('locationDenied');
     getCurrentLocationWeather();
   });
 
-  denyLocationBtn.addEventListener('click', () => {
+  denyLocationBtn?.addEventListener('click', () => {
     hideLocationModal();
     localStorage.setItem('locationAsked', 'true');
     localStorage.setItem('locationDenied', 'true');
   });
 
   // Close modal when clicking outside
-  locationModal.addEventListener('click', (e) => {
+  locationModal?.addEventListener('click', (e) => {
     if (e.target === locationModal) {
       hideLocationModal();
       localStorage.setItem('locationAsked', 'true');
@@ -629,7 +857,7 @@ try {
   });
 
   // Input event listener for suggestions
-  cityInput.addEventListener('input', (e) => {
+  cityInput?.addEventListener('input', (e) => {
     const query = e.target.value.trim();
     
     clearTimeout(debounceTimer);
@@ -645,8 +873,8 @@ try {
   });
 
   // Keyboard navigation
-  cityInput.addEventListener('keydown', (e) => {
-    if (!suggestionsDropdown.classList.contains('hidden')) {
+  cityInput?.addEventListener('keydown', (e) => {
+    if (!suggestionsDropdown?.classList.contains('hidden')) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestions.length - 1);
@@ -668,7 +896,7 @@ try {
   });
 
   // Click on suggestion
-  suggestionsDropdown.addEventListener('click', (e) => {
+  suggestionsDropdown?.addEventListener('click', (e) => {
     const suggestionItem = e.target.closest('.suggestion-item');
     if (suggestionItem) {
       const index = parseInt(suggestionItem.dataset.index);
@@ -681,15 +909,15 @@ try {
 
   // Hide suggestions when clicking outside
   document.addEventListener('click', (e) => {
-    if (!cityInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
+    if (!cityInput?.contains(e.target) && !suggestionsDropdown?.contains(e.target)) {
       hideSuggestions();
     }
   });
 
   // Form submission
-  form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const cityInputValue = cityInput.value.trim();
+    const cityInputValue = cityInput?.value.trim();
 
     if (!cityInputValue) return;
 
@@ -702,7 +930,7 @@ try {
       console.error('Error fetching weather data:', error);
       weatherContainer.innerHTML = `
         <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-          <p class="text-red-600 dark:text-red-400 text-lg">${error.message}</p>
+          <p class="text-red-600 dark:text-red-400 text-lg">${getTranslation('cityNotFound', currentLang)}</p>
         </div>
       `;
     }
