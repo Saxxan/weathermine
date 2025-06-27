@@ -8,6 +8,7 @@ interface WeatherData {
   maxTemperature: number;
   weatherCode: number;
   windSpeed: number;
+  humidity: number;
   hourlyPrecipitation: number[];
   hourlyTime: string[];
   hourlyWindSpeed: number[];
@@ -66,18 +67,9 @@ function getThermometerIcon(): string {
   `;
 }
 
-function getDropletIcon(): string {
-  return `
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 14.25c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"/>
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 11.25c0-1.5-1.5-3-3-3s-3 1.5-3 3"/>
-    </svg>
-  `;
-}
-
 function getHumidityIcon(): string {
   return `
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
     </svg>
   `;
@@ -108,20 +100,27 @@ const hourlyDataLength = hasHourlyData ? Math.min(weatherData.hourlyTime.length,
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-3 gap-3">
       <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
         <div class="flex items-center mb-1">
           <span set:html={getWindIcon()}></span>
-          <span class="ml-2 text-sm opacity-75">Wind Speed</span>
+          <span class="ml-2 text-sm opacity-75">Wind</span>
         </div>
-        <p class="text-xl font-semibold">{weatherData.windSpeed} km/h</p>
+        <p class="text-lg font-semibold">{weatherData.windSpeed} km/h</p>
+      </div>
+      <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+        <div class="flex items-center mb-1">
+          <span set:html={getHumidityIcon()}></span>
+          <span class="ml-2 text-sm opacity-75">Humidity</span>
+        </div>
+        <p class="text-lg font-semibold">{weatherData.humidity}%</p>
       </div>
       <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
         <div class="flex items-center mb-1">
           <span set:html={getThermometerIcon()}></span>
           <span class="ml-2 text-sm opacity-75">Feels Like</span>
         </div>
-        <p class="text-xl font-semibold">{weatherData.temperature}°C</p>
+        <p class="text-lg font-semibold">{weatherData.temperature}°C</p>
       </div>
     </div>
   </div>

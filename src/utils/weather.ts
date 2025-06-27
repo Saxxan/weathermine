@@ -18,6 +18,7 @@ export function processWeatherData(weatherData: any, cityName: string): object {
     maxTemperature: Math.round(daily.temperature_2m_max?.[0] ?? 0),
     weatherCode: current.weather_code ?? 0,
     windSpeed: Math.round(current.wind_speed_10m ?? 0),
+    humidity: Math.round(current.relative_humidity_2m ?? 0),
     hourlyPrecipitation: (hourly.precipitation_probability ?? []).slice(0, 24),
     hourlyTime: (hourly.time ?? []).slice(0, 24),
     hourlyWindSpeed: (hourly.wind_speed_10m ?? []).slice(0, 24).map((speed: number) => Math.round(speed)),

@@ -57,7 +57,7 @@ export async function getWeatherData(latitude: number, longitude: number) {
   const params = new URLSearchParams({
     latitude: latitude.toString(),
     longitude: longitude.toString(),
-    current: 'temperature_2m,weather_code,wind_speed_10m',
+    current: 'temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m',
     hourly: 'temperature_2m,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m',
     daily: 'temperature_2m_max,temperature_2m_min',
     timezone: 'auto',
