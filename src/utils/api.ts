@@ -26,6 +26,33 @@ export async function getCoordinates(city: string): Promise<{ latitude: number; 
   };
 }
 
+export async function searchCities(query: string): Promise<Array<{
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  admin1?: string;
+  admin2?: string;
+}>> {
+  if (query.length < 2) return [];
+
+  const params = new URLSearchParams({
+    name: query,
+    count: '10',
+    language: 'en',
+    format: 'json'
+  });
+
+  const response = await fetch(`${GEOCODING_API_URL}?${params}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch city suggestions');
+  }
+
+  const data = await response.json();
+  return data.results || [];
+}
+
 export async function getWeatherData(latitude: number, longitude: number) {
   const params = new URLSearchParams({
     latitude: latitude.toString(),
