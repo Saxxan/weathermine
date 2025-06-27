@@ -6,7 +6,7 @@ export function getWeatherDescription(code: number): string {
   return "Stormy";
 }
 
-export function processWeatherData(weatherData: any, cityName: string) {
+export function processWeatherData(weatherData: any, cityName: string): object {
   const current = weatherData?.current ?? {};
   const daily = weatherData?.daily ?? {};
   const hourly = weatherData?.hourly ?? {};
