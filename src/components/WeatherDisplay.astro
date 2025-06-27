@@ -4,45 +4,229 @@ import { getWeatherDescription } from "../utils/weather";
 interface WeatherData {
   city: string;
   temperature: number;
+  minTemperature: number;
+  maxTemperature: number;
   weatherCode: number;
   windSpeed: number;
   hourlyPrecipitation: number[];
   hourlyTime: string[];
+  hourlyWindSpeed: number[];
+  hourlyPrecipitationAmount: number[];
+  hourlyTemperature: number[];
+  hourlyHumidity: number[];
 }
 
 const { weatherData } = Astro.props;
+
+function getWeatherIcon(code: number): string {
+  if (code <= 3) return `
+    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+    </svg>
+  `;
+  if (code <= 48) return `
+    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+    </svg>
+  `;
+  if (code <= 67) return `
+    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M16 17v1a2 2 0 0 1-2 2H9l3-3 3 3a2 2 0 0 1-2-2v-1"/>
+    </svg>
+  `;
+  if (code <= 77) return `
+    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M8 21l1-1 1 1-1 1-1-1zm4 0l1-1 1 1-1 1-1-1zm4 0l1-1 1 1-1 1-1-1z"/>
+    </svg>
+  `;
+  return `
+    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M13 16l-4-4 4-4M17 16l-4-4 4-4"/>
+    </svg>
+  `;
+}
+
+function getWindIcon(): string {
+  return `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1a3 3 0 010 6h-1m8-6h1a3 3 0 010 6h-1m-9-6h1a3 3 0 010 6h-1"/>
+    </svg>
+  `;
+}
+
+function getThermometerIcon(): string {
+  return `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    </svg>
+  `;
+}
+
+function getDropletIcon(): string {
+  return `
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 14.25c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 11.25c0-1.5-1.5-3-3-3s-3 1.5-3 3"/>
+    </svg>
+  `;
+}
+
+function getHumidityIcon(): string {
+  return `
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+    </svg>
+  `;
+}
 ---
 
-<div class="p-6 rounded-lg shadow-lg">
-  <h2 class="text-2xl font-medium mb-6">
-    Current Weather in {weatherData.city}
-  </h2>
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+  <!-- Main Weather Info -->
+  <div class="p-6 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+    <h2 class="text-2xl font-semibold mb-4 text-center">
+      {weatherData.city}
+    </h2>
+    
+    <div class="flex items-center justify-center mb-6">
+      <div class="text-center mr-6">
+        <div class="flex justify-center mb-2" set:html={getWeatherIcon(weatherData.weatherCode)}></div>
+        <p class="text-lg opacity-90">{getWeatherDescription(weatherData.weatherCode)}</p>
+      </div>
+      <div class="text-center">
+        <p class="text-6xl font-light mb-2">{weatherData.temperature}°</p>
+        <p class="text-sm opacity-75">
+          H: {weatherData.maxTemperature}° L: {weatherData.minTemperature}°
+        </p>
+      </div>
+    </div>
 
-  <section class="flex justify-between">
-    <div>
-      <p class="text-xl text-center mb-2">Temperature</p>
-      <p class="text-center dark:text-zinc-200 text-gray-800">{weatherData.temperature} ºC</p>
-    </div>
-    <div>
-      <p class="text-xl text-center mb-2">Condition</p>
-      <p class="text-center dark:text-zinc-200 text-gray-800">{getWeatherDescription(weatherData.weatherCode)}</p>
-    </div>
-    <div>
-      <p class="text-xl text-center mb-2">Wind Speed</p>
-      <p class="text-center dark:text-zinc-200 text-gray-800">{weatherData.windSpeed} km/h</p>
-    </div>
-  </section>
-  <h3 class="text-xl font-semibold mt-4 mb-2">
-    Hourly Precipitation Probability
-  </h3>
-  <div class="grid grid-cols-6 gap-2">
-    {
-      weatherData.hourlyTime.map((time, index) => (
-        <div class="text-center">
-          <p class="text-sm">{new Date(time).getHours()}:00</p>
-          <p class="font-bold">{weatherData.hourlyPrecipitation[index]}%</p>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+        <div class="flex items-center mb-1">
+          <span set:html={getWindIcon()}></span>
+          <span class="ml-2 text-sm opacity-75">Wind Speed</span>
         </div>
-      ))
-    }
+        <p class="text-xl font-semibold">{weatherData.windSpeed} km/h</p>
+      </div>
+      <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+        <div class="flex items-center mb-1">
+          <span set:html={getThermometerIcon()}></span>
+          <span class="ml-2 text-sm opacity-75">Feels Like</span>
+        </div>
+        <p class="text-xl font-semibold">{weatherData.temperature}°C</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hourly Forecast Sections -->
+  <div class="p-6 space-y-6">
+    <!-- Hourly Precipitation Probability -->
+    <div>
+      <h3 class="text-lg font-semibold mb-3 flex items-center dark:text-white">
+        <span set:html={getDropletIcon()}></span>
+        <span class="ml-2">Precipitation Probability</span>
+      </h3>
+      <div class="overflow-x-auto">
+        <div class="flex space-x-4 pb-2" style="min-width: max-content;">
+          {weatherData.hourlyTime.slice(0, 24).map((time, index) => (
+            <div class="flex-shrink-0 text-center bg-gray-50 dark:bg-gray-700 rounded-lg p-3 min-w-[80px]">
+              <p class="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                {new Date(time).getHours().toString().padStart(2, '0')}:00
+              </p>
+              <div class="h-12 flex items-end justify-center mb-1">
+                <div 
+                  class="bg-blue-500 rounded-t w-6 transition-all duration-300"
+                  style={`height: ${Math.max(weatherData.hourlyPrecipitation[index] * 0.4, 4)}px`}
+                ></div>
+              </div>
+              <p class="text-sm font-semibold dark:text-white">{weatherData.hourlyPrecipitation[index]}%</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Hourly Wind Speed -->
+    <div>
+      <h3 class="text-lg font-semibold mb-3 flex items-center dark:text-white">
+        <span set:html={getWindIcon()}></span>
+        <span class="ml-2">Wind Speed</span>
+      </h3>
+      <div class="overflow-x-auto">
+        <div class="flex space-x-4 pb-2" style="min-width: max-content;">
+          {weatherData.hourlyTime.slice(0, 24).map((time, index) => (
+            <div class="flex-shrink-0 text-center bg-gray-50 dark:bg-gray-700 rounded-lg p-3 min-w-[80px]">
+              <p class="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                {new Date(time).getHours().toString().padStart(2, '0')}:00
+              </p>
+              <div class="h-12 flex items-end justify-center mb-1">
+                <div 
+                  class="bg-green-500 rounded-t w-6 transition-all duration-300"
+                  style={`height: ${Math.max(weatherData.hourlyWindSpeed[index] * 2, 4)}px`}
+                ></div>
+              </div>
+              <p class="text-sm font-semibold dark:text-white">{weatherData.hourlyWindSpeed[index]} km/h</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Hourly Precipitation Amount -->
+    <div>
+      <h3 class="text-lg font-semibold mb-3 flex items-center dark:text-white">
+        <span set:html={getDropletIcon()}></span>
+        <span class="ml-2">Precipitation Amount</span>
+      </h3>
+      <div class="overflow-x-auto">
+        <div class="flex space-x-4 pb-2" style="min-width: max-content;">
+          {weatherData.hourlyTime.slice(0, 24).map((time, index) => (
+            <div class="flex-shrink-0 text-center bg-gray-50 dark:bg-gray-700 rounded-lg p-3 min-w-[80px]">
+              <p class="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                {new Date(time).getHours().toString().padStart(2, '0')}:00
+              </p>
+              <div class="h-12 flex items-end justify-center mb-1">
+                <div 
+                  class="bg-indigo-500 rounded-t w-6 transition-all duration-300"
+                  style={`height: ${Math.max(weatherData.hourlyPrecipitationAmount[index] * 10, 4)}px`}
+                ></div>
+              </div>
+              <p class="text-sm font-semibold dark:text-white">{weatherData.hourlyPrecipitationAmount[index]} mm</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Hourly Temperature -->
+    <div>
+      <h3 class="text-lg font-semibold mb-3 flex items-center dark:text-white">
+        <span set:html={getThermometerIcon()}></span>
+        <span class="ml-2">Hourly Temperature</span>
+      </h3>
+      <div class="overflow-x-auto">
+        <div class="flex space-x-4 pb-2" style="min-width: max-content;">
+          {weatherData.hourlyTime.slice(0, 24).map((time, index) => (
+            <div class="flex-shrink-0 text-center bg-gray-50 dark:bg-gray-700 rounded-lg p-3 min-w-[80px]">
+              <p class="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                {new Date(time).getHours().toString().padStart(2, '0')}:00
+              </p>
+              <div class="h-12 flex items-center justify-center mb-1">
+                <div class="text-orange-500 font-bold text-lg">
+                  {weatherData.hourlyTemperature[index]}°
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {weatherData.hourlyHumidity[index]}% RH
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
