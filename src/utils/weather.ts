@@ -7,18 +7,22 @@ export function getWeatherDescription(code: number): string {
 }
 
 export function processWeatherData(weatherData: any, cityName: string) {
+  const current = weatherData?.current ?? {};
+  const daily = weatherData?.daily ?? {};
+  const hourly = weatherData?.hourly ?? {};
+
   return {
     city: cityName,
-    temperature: Math.round(weatherData.current.temperature_2m),
-    minTemperature: Math.round(weatherData.daily.temperature_2m_min[0]),
-    maxTemperature: Math.round(weatherData.daily.temperature_2m_max[0]),
-    weatherCode: weatherData.current.weather_code,
-    windSpeed: Math.round(weatherData.current.wind_speed_10m),
-    hourlyPrecipitation: weatherData.hourly.precipitation_probability.slice(0, 24),
-    hourlyTime: weatherData.hourly.time.slice(0, 24),
-    hourlyWindSpeed: weatherData.hourly.wind_speed_10m.slice(0, 24).map((speed: number) => Math.round(speed)),
-    hourlyPrecipitationAmount: weatherData.hourly.precipitation.slice(0, 24).map((amount: number) => Math.round(amount * 10) / 10),
-    hourlyTemperature: weatherData.hourly.temperature_2m.slice(0, 24).map((temp: number) => Math.round(temp)),
-    hourlyHumidity: weatherData.hourly.relative_humidity_2m.slice(0, 24)
+    temperature: Math.round(current.temperature_2m ?? 0),
+    minTemperature: Math.round(daily.temperature_2m_min?.[0] ?? 0),
+    maxTemperature: Math.round(daily.temperature_2m_max?.[0] ?? 0),
+    weatherCode: current.weather_code ?? 0,
+    windSpeed: Math.round(current.wind_speed_10m ?? 0),
+    hourlyPrecipitation: (hourly.precipitation_probability ?? []).slice(0, 24),
+    hourlyTime: (hourly.time ?? []).slice(0, 24),
+    hourlyWindSpeed: (hourly.wind_speed_10m ?? []).slice(0, 24).map((speed: number) => Math.round(speed)),
+    hourlyPrecipitationAmount: (hourly.precipitation ?? []).slice(0, 24).map((amount: number) => Math.round(amount * 10) / 10),
+    hourlyTemperature: (hourly.temperature_2m ?? []).slice(0, 24).map((temp: number) => Math.round(temp)),
+    hourlyHumidity: (hourly.relative_humidity_2m ?? []).slice(0, 24)
   };
 }
